@@ -70,7 +70,7 @@ cl[is.na(cl)] <- 0 ## replace missing species
 clenv = read.csv(file = './Age_samplingCL.csv',header=T,sep=';')
 clenv$chevaux = clenv$Nom
 
-dim(cld)
+dim(cl)
 #[1] 41 25
 
 cld = merge(clenv,cl,by='chevaux')
@@ -256,38 +256,38 @@ for (modeltype in 1:2){
                                              ".Rdata",sep = ""))
         if(file.exists(filename)){
           load(filename)
-          
+
           mpost = convertToCodaObject(m)
-          
+
           es.beta = effectiveSize(mpost$Beta)
           ge.beta = gelman.diag(mpost$Beta,multivariate=FALSE)$psrf
-          
+
           es.gamma = effectiveSize(mpost$Gamma)
           ge.gamma = gelman.diag(mpost$Gamma,multivariate=FALSE)$psrf
-          
+
           es.V = effectiveSize(mpost$V)
           ge.V = gelman.diag(mpost$V,multivariate=FALSE)$psrf
-          
+
           mpost$temp = mpost$Omega[[1]]
           for(i in 1:length(mpost$temp)){
             mpost$temp[[i]] = mpost$temp[[i]][,1:ns^2]
           }
           es.omega = effectiveSize(mpost$temp)
           ge.omega = gelman.diag(mpost$temp,multivariate=FALSE)$psrf
-          
-          
+
+
           mixing = list(es.beta=es.beta, ge.beta=ge.beta,
                         es.gamma=es.gamma, ge.gamma=ge.gamma,
                         es.V=es.V, ge.V=ge.V,
                         es.omega=es.omega, ge.omega=ge.omega)
-          
-          filename = file.path(MixingDir, 
+
+          filename = file.path(MixingDir,
                                paste("dataset_",as.character(dataset),"_",
                                      c("pa","abundance")[modeltype],"_thin",as.character(thin),
                                      "_model",as.character(model),".Rdata",sep = ""))
-          
+
           save(file=filename, mixing)
-          
+
           cont=FALSE
         } else {
           thin = thin/10}
@@ -443,6 +443,7 @@ for (modeltype in 1:2){
       write.csv(ta,file = paste0(filnam,".csv"))
     }
     
+    
     plotOrder = sp[corrMatOrder(toPlot[sp,sp], order = "AOE")]
     
     colnames(toPlot) = gsub('P.impariden.','P.imparidentatum', colnames(toPlot))
@@ -472,6 +473,25 @@ for (modeltype in 1:2){
     sp2 = gsub('C.labiatum','C.labiatus', sp2)
     sp2 = gsub('C.labratum','C.labratus', sp2)
     sp2 = gsub('C.coronatum','C.coronatus',   sp2)
+    
+    ### ROC curves by species for presence/absence models
+    ## Extract median posterior value (use evaluateModelFit function)
+    if(modeltype == 1){
+      mean2 = function(x){return (mean(x,na.rm=TRUE))}
+      mPredY = matrix(NA, nrow = m$ny, ncol = m$ns)
+      sel = !m$distr[,1]==3
+      if (sum(sel)>0){
+        mPredY[,sel] = as.matrix(apply(abind::abind(predY[,sel,,drop=FALSE], along=3),
+                                       c(1,2), mean2))
+      }
+      
+      pdf(file = paste0('ROCcurves_Normandy_model',model,'.pdf'))
+      par(mfrow = c(5,3))
+      for(i in order(m$spNames)){
+        plot(pROC::roc(m$Y[,i],mPredY[,i]),main = sp2[i],xlim=c(1,0),ylim = c(0,1))
+      }
+      dev.off()
+    }
     
     plotOrder = sp2[corrMatOrder(toPlot[sp2,sp2], order = "AOE")]
     
@@ -628,6 +648,9 @@ pdf(file = './Figure4.pdf', width = 14, height= 8)
 multiplot(p1,p2,cols=2)
 dev.off()
 
+#### Export correlation matrices
+write.csv(corr_pa, file = 'CooccurrenceMatrix_PA_Normandy.csv',quote=F)
+write.csv(corr_abu, file = 'CooccurrenceMatrix_ABU_Normandy.csv',quote=F)
 
 
 # R version 4.0.2 (2020-06-22)

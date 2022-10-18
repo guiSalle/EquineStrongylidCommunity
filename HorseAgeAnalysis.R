@@ -12,7 +12,7 @@ theme_set(theme_bw())
 setwd('~/Documents/CYATHOMIX/WP3/MetaAnalysis/')
 
 ## Load data
-kuz = read.csv(file='./data_kuzmina2005.csv',sep=';',header=T)
+kuz = read.csv(file='./data_kuzmina2016.csv',sep=';',header=T)
 
 ## Age distribution
 table(kuz$Age)
@@ -73,6 +73,7 @@ summary.aov(mage)
 # poly(agroup, 2, raw = TRUE)   2  107.7   53.86   5.793  0.00415 ** 
 # as.factor(Farm)               7  576.3   82.32   8.856 1.83e-08 ***
 # Residuals                   101  938.9    9.30
+
 summary(mage)
 # Call:
 #   lm(formula = nsp ~ log(EPG) + poly(agroup, 2, raw = TRUE) + as.factor(Farm), 
@@ -172,22 +173,62 @@ summary(age.indic2)
 # C.labiatus  0.419   0.012 *
 # C.aswhorthi 0.414   0.014 *
 
+#### Plot
+dasp_to_plot = dasp[,which(colnames(dasp) %in% c('C.labiatus','C.aswhorthi'))]
+dasp_to_plot = data.frame(dasp_to_plot)
+dasp_to_plot$age = age
+dasp_to_plot = reshape2::melt(dasp_to_plot,3)
+dasp_to_plot$Species = as.character(dasp_to_plot$variable)
+dasp_to_plot$Species[dasp_to_plot$Species=='C.ashworthi']='C. ashworthi'
+dasp_to_plot$Species[dasp_to_plot$Species=='C.labiatus']='C. labiatus'
 
+pdf(file = 'Figure2rev.pdf')
+ggplot(dasp_to_plot,
+       aes(y = value, x = age, group = paste0(age,Species),
+           fill = variable)) +
+  facet_wrap(~ Species, scales = 'free') +
+  geom_boxplot() + 
+  xlab('Age (in years)') + ylab('Worm count') +
+  theme_classic() +
+  scale_x_continuous(limits = c(0,10),breaks = seq(0,10,2))+
+  scale_fill_manual(values = ggsci::pal_jco()(2)) +
+  theme(strip.background = element_blank(),
+        text = element_text(size = 12),
+        strip.text = element_text(size = 12, face = 'italic'),
+        legend.position = 'none') 
+dev.off()
+  
 
 ####--------------======== Pattern of beta-diversity ====-----------------
 sp = dfage[,-c(1:8)]
-env = dfage[,c(2,6,4,5,8)]
-env$Farm = factor(env$Farm)
 ord <- metaMDS(sp,try = 20,k=3, distance = 'bray')
-
+env = dfage[,c(2,6,5,8)]
+env$Farm = factor(env$Farm)
+env$agroup = factor(env$agroup)
 fit <- envfit(ord, env , perm = 1000)
+
+fit$factors
+# Goodness of fit:
+#            r2   Pr(>r)    
+# Farm   0.2874 0.000999 ***
+# agroup 0.1337 0.014985 *  
+# Sex    0.0744 0.001998 ** 
 
 fit$vectors
 #           NMDS1    NMDS2     r2   Pr(>r)   
-# agroup  0.99830 -0.05826 0.0986 0.002997 **
-# EPG     0.14955  0.98875 0.0168 0.368631
+# EPG     0.14946 -0.98877 0.0168 0.3876
 
-adonis(sp ~ Farm + agroup + Management + Sex + EPG,data = dfage)
+## Age as a continuous variable
+env2 = dfage[,c(2,3,5,8)]
+env2$Farm = factor(env2$Farm)
+fit2 <- envfit(ord, env2, perm = 1000)
+
+fit2$vectors
+#        NMDS1    NMDS2     r2   Pr(>r)   
+# Age  0.98056 -0.19620 0.0952 0.003996 **
+# EPG  0.14831  0.98894 0.0169 0.363636 
+
+adonis(sp ~ Farm + agroup + Sex + EPG,data = dfage)
 # Call:
 #   adonis(formula = sp ~ Farm + agroup + Management + Sex + EPG,      data = dfage) 
 # 
@@ -196,68 +237,31 @@ adonis(sp ~ Farm + agroup + Management + Sex + EPG,data = dfage)
 # 
 # Terms added sequentially (first to last)
 # 
-#             Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-# Farm         1    0.9697 0.96973  4.1410 0.03368  0.003 ** 
-# agroup       1    0.5454 0.54541  2.3290 0.01894  0.030 *  
-# Management   2    2.0883 1.04413  4.4587 0.07253  0.001 ***
-# Sex          2    0.5260 0.26302  1.1232 0.01827  0.311    
-# EPG          1    0.3082 0.30817  1.3160 0.01070  0.224    
-# Residuals  104   24.3546 0.23418         0.84587           
-# Total      111   28.7922                 1.00000
+#            Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+# Farm        1    0.9697 0.96973  3.9167 0.03368  0.002 **
+# agroup      1    0.5454 0.54541  2.2029 0.01894  0.039 * 
+# Sex         2    0.4815 0.24077  0.9725 0.01672  0.438   
+# EPG         1    0.5513 0.55129  2.2266 0.01915  0.037 * 
+# Residuals 106   26.2442 0.24759         0.91150          
+# Total     111   28.7922                 1.00000
 
-### First two axes
-
-### ggplot of NMDS
-data.scores = as.data.frame(scores(ord))
-data.scores = cbind(data.scores,env)
-levels(data.scores$env) = c('America - Temperate - Necropsy',
-                            'America - Tropical - Necropsy',
-                            'Europe - Temperate - Necropsy',
-                            'Europe - Continental - Necropsy',
-                            'Europe - Continental - Deworming')
-en_coord_cont = as.data.frame(scores(fit, "vectors")) * ordiArrowMul(fit)
-en_coord_cat = as.data.frame(scores(fit, "factors")) * ordiArrowMul(fit)
-en_coord_sp = data.frame(scores(ord$species))
-
-# rownames(en_coord_cat)[rownames(en_coord_cat)=='envAm-Temp-nec']='America - Temperate - Necropsy'
-# rownames(en_coord_cat)[rownames(en_coord_cat)=='envAm-Trop-nec']='America - Tropical - Necropsy'
-# rownames(en_coord_cat)[rownames(en_coord_cat)=='envEu-Temp-nec']='Europe - Temperate - Necropsy'
-# rownames(en_coord_cat)[rownames(en_coord_cat)=='envEu-Cont-nec']='Europe - Continental - Necropsy'
-# rownames(en_coord_cat)[rownames(en_coord_cat)=='envEu-Cont-dew']='Europe - Continental - Deworming'
+adonis(sp[dfage$Sex=='F',] ~ Farm + agroup + EPG,
+       data = dfage[dfage$Sex=='F',])
+# Call:
+#   adonis(formula = sp[dfage$Sex == "F", ] ~ Farm + agroup + EPG,      data = dfage[dfage$Sex == "F", ]) 
 # 
-# rownames(en_coord_cont)[rownames(en_coord_cont)=='year']='Year'
-# rownames(en_coord_cont)[rownames(en_coord_cont)=='Nb_Horse']='Sampling effort'
+# Permutation: free
+# Number of permutations: 999
+# 
+# Terms added sequentially (first to last)
+# 
+#           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)   
+# Farm       1    1.0779 1.07795  4.5104 0.05057  0.002 **
+# agroup     1    0.5514 0.55137  2.3071 0.02587  0.037 * 
+# EPG        1    0.3267 0.32668  1.3669 0.01533  0.184   
+# Residuals 81   19.3582 0.23899         0.90823          
+# Total     84   21.3142                 1.00000
 
-
-require(ggrepel)
-require(viridis)
-
-gg = ggplot(data = data.scores, aes(x = NMDS1, y = NMDS2)) + 
-  #geom_point(data = data.scores, aes(colour = paste0(Management,Sex), size = 2, alpha = 0.5)) +
-  #scale_colour_manual(values = viridis_pal(option = 'D')(9)) + 
-  ### Continuous factors
-  geom_segment(aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2), 
-               data = en_coord_cont, size =.5, alpha = 0.5, colour = "grey30") +
-  geom_text(data = en_coord_cont, aes(x = NMDS1, y = NMDS2), colour = "grey30", 
-            fontface = "bold", nudge_x = .05, nudge_y = c(.02,-.02),
-            label = row.names(en_coord_cont)) +
-  ### add species
-  geom_point(data = en_coord_sp, aes(x = MDS1, y = MDS2), 
-             shape = "diamond", size = 2, alpha = 0.4, colour = "black") +
-  geom_text_repel(data = en_coord_sp, aes(x = MDS1, y = MDS2), colour = "grey30", 
-                  label = row.names(en_coord_sp),size = 3) + 
-  ## Categorical factors
-  geom_point(data = en_coord_cat, aes(x = NMDS1, y = NMDS2),
-             shape = "diamond", size = 5, alpha = .8,
-             colour = viridis_pal(option = 'D')(14)) +
-  theme(axis.title = element_text(size = 12, colour = "grey30"), 
-        panel.background = element_blank(), 
-        panel.border = element_rect(fill = NA, colour = "grey30"), 
-        legend.position = 'bottom', legend.title = element_blank(),
-        legend.text = element_text(size = 12)) +
-  guides(color = guide_legend(override.aes = list(size = 4),ncol = 2)) +
-  labs(colour = 'Environment')
-gg
 
 ####--------------======== Partition gamma parasite diversity ====-----------------
 ## This is to isolate the relative importance of alpha div vs. 
@@ -287,6 +291,27 @@ dasp = dasp[order(daenv$Farm,daenv$Manag,daenv$agF),]
 ####--------------======== Relative contribution ====-----------------
 ad2b = adipart(dasp,daenv,
                index="richness", nsimul=1000, weights="prop", relative=TRUE)
+# adipart object
+# 
+# Call: adipart(y = dasp, x = daenv, index = "richness", weights = "prop", relative =
+#                 TRUE, nsimul = 1000)
+# 
+# nullmodel method 'r2dtable' with 1000 simulations
+# options:  index richness, weights prop
+# alternative hypothesis: statistic is less or greater than simulated values
+# 
+#         statistic      SES     mean     2.5%      50%  97.5% Pr(sim.)    
+# alpha.1  0.451150 -31.8953 0.671288 0.657316 0.671261 0.6842 0.000999 ***
+# alpha.2  0.526652 -26.3396 0.739202 0.723286 0.739097 0.7553 0.000999 ***
+# alpha.3  0.784282 -11.5573 0.906245 0.884905 0.906596 0.9260 0.000999 ***
+# alpha.4  0.784282 -11.5573 0.906245 0.884905 0.906596 0.9260 0.000999 ***
+# gamma    1.000000   0.0000 1.000000 1.000000 1.000000 1.0000 1.000000    
+# beta.1   0.075502   1.5148 0.067914 0.057835 0.067820 0.0773 0.132867    
+# beta.2   0.257630   7.5369 0.167044 0.143285 0.166732 0.1902 0.000999 ***
+# beta.3   0.000000   0.0000 0.000000 0.000000 0.000000 0.0000 1.000000    
+# beta.4   0.215718  11.5573 0.093755 0.074041 0.093404 0.1151 0.000999 ***
+# ---
+# Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 adout = NULL
 
@@ -319,13 +344,13 @@ adm = reshape2::melt(adout,
            c('partition','quant2.5','quant97.5','pval')) ### Remove management that does not contribute
 adm = adm[adm$partition %in% c('alphaH','betaH','betaAMF','betaF'),]
 adm$part = 'Within host richness'
-adm$part[adm$partition=='betaH'] = 'Between-host turnover'
-adm$part[adm$partition=='betaAMF'] = 'Between-age class turnover'
-adm$part[adm$partition=='betaF'] = 'Between-farm turnover'
+adm$part[adm$partition=='betaH'] = 'Between-host diversity (ß_host)'
+adm$part[adm$partition=='betaAMF'] = 'Between-age class diversity (ß_age)'
+adm$part[adm$partition=='betaF'] = 'Between-farm diversity (ß_farm)'
 
-adm$part = factor(adm$part,levels=c( 'Between-host turnover',
-                                     'Between-age class turnover',
-                                     'Between-farm turnover',
+adm$part = factor(adm$part,levels=c( 'Between-host diversity (ß_host)',
+                                     'Between-age class diversity (ß_age)',
+                                     'Between-farm diversity (ß_farm)',
                                      'Within host richness'))
 fig_adi = ggplot(adm,
                  aes(x = part, y = value, group = variable, col = variable)) +
@@ -340,10 +365,14 @@ fig_adi = ggplot(adm,
   theme(legend.position = 'bottom', legend.title = element_blank(),
         text = element_text(size = 14))
 fig_adi
+
 ## Export
 pdf(file = './Figure2.pdf')
 fig_adi
 invisible(dev.off())
+
+
+##
 
 sessionInfo()
 # R version 4.0.2 (2020-06-22)
