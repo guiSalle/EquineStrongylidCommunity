@@ -1,6 +1,6 @@
 # EquineStrongylidCommunity
 
-These R scripts implement the analyses reported in Boisseau et al. 2022, Patterns of variation in equine strongyle community structure across age groups and gut compartments. Associated raw data have been published under the INRAE data repository: doi:10.57745/FQ7RUA. 
+These R scripts implement the analyses reported in Boisseau et al. 2022, Patterns of variation in equine strongyle community structure across age groups and gut compartments. Associated raw data have been published under the INRAE data repository: https://doi:10.57745/FQ7RUA. 
 
 * ``` IndividualDiversity.R ``` : R script used to investigate the relationship between the diversity (species richness and dominance) in equine strongylid community from Eastern Europe (Kuzmina et al. 2016; Sallé et al. 2018).
 
