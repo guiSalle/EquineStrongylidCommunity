@@ -1,4 +1,4 @@
-# EquineStrongylidCommunity
+# Patterns of variation in equine strongyle community structure
 
 These R scripts implement the analyses reported in Boisseau et al. 2022, Patterns of variation in equine strongyle community structure across age groups and gut compartments. Associated raw data have been published under the INRAE data repository: https://doi:10.57745/FQ7RUA. 
 
