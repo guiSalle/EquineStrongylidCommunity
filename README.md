@@ -6,7 +6,7 @@ These R scripts implement the analyses reported in Boisseau et al. 2022, Pattern
 
 * ``` HorseAgeAnalysis.R ``` : R script to re-analyze the relationship between horse age and the strongylid community structure. Data from Kuzmina et al. 2016 were used to apply a diversity partitioning approach (Crist et al. 2003, https://doi.org/10.1086/378901).
 
-* ``` HmscAustralia.R ``` and ``` HmscNormandy.R ``` : R scripts to implement the HSMC framework (https://github.com/hmsc-r/HMSC) and estimate species co-occurrences (environment dependent and residual components). These codes have been adapted from a previous publication (https://doi.org/10.1111/mec.15516 and code deposited at https://datadryad.org/stash/dataset/doi:10.5061/dryad.9kd51c5dp). This analysis was applied to two observations collected in Normandy, France (https://doi.org/10.1016/s0304-4017(02)00328-x) and Victoria State, Australia (https://doi.org/10.1016/0020-7519(94)00214-9).
+* ``` HmscAustralia.R ``` and ``` HmscNormandy.R ``` : R scripts to implement the HSMC framework (https://github.com/hmsc-r/HMSC) and estimate species co-occurrences (environment dependent and residual components) from positive abundances or presence/absence data. These codes have been adapted from a previous publication (https://doi.org/10.1111/mec.15516 and code deposited at https://datadryad.org/stash/dataset/doi:10.5061/dryad.9kd51c5dp). This analysis was applied to two observations collected in Normandy, France (https://doi.org/10.1016/s0304-4017(02)00328-x) and Victoria State, Australia (https://doi.org/10.1016/0020-7519(94)00214-9).
 
 
 
