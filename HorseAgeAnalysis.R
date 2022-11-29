@@ -66,42 +66,79 @@ dim(dfage)
 nsp = rowSums(ifelse(dfage[,-c(1:8)]>0,1,0))
 dfage$agroup = as.numeric(dfage$agroup)
 
-mage = lm(nsp ~ log(EPG) + poly(agroup, 2, raw=TRUE) + as.factor(Farm), data = dfage)
+### FEC modeling
+mage = lm(log(EPG) ~ agroup + log10(nsp) +  as.factor(Farm), data = dfage)
 summary.aov(mage)
-#                              Df Sum Sq Mean Sq F value   Pr(>F)    
-# log(EPG)                      1    6.4    6.42   0.690  0.40799    
-# poly(agroup, 2, raw = TRUE)   2  107.7   53.86   5.793  0.00415 ** 
-# as.factor(Farm)               7  576.3   82.32   8.856 1.83e-08 ***
-# Residuals                   101  938.9    9.30
+#                  Df Sum Sq Mean Sq F value   Pr(>F)    
+# agroup            1  10.45  10.453  23.984 3.66e-06 ***
+# log(nsp)          1   0.30   0.299   0.687    0.409    
+# as.factor(Farm)   7  18.36   2.622   6.017 6.98e-06 ***
+# Residuals       102  44.45   0.436  
 
 summary(mage)
 # Call:
-#   lm(formula = nsp ~ log(EPG) + poly(agroup, 2, raw = TRUE) + as.factor(Farm), 
+#   lm(formula = log(EPG) ~ agroup + log10(nsp) + as.factor(Farm), 
+#      data = dfage)
+# 
+# Residuals:
+#   Min       1Q   Median       3Q      Max 
+# -2.25432 -0.35277  0.01762  0.45344  1.38568 
+# 
+# Coefficients:
+#                   Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)        7.34593    0.40355  18.203  < 2e-16 ***
+# agroup            -0.06370    0.02372  -2.685  0.00846 ** 
+# log10(nsp)          -0.09659    0.17302  -0.558  0.57788    
+# as.factor(Farm)2  -0.36294    0.22616  -1.605  0.11164    
+# as.factor(Farm)4  -0.43209    0.22603  -1.912  0.05873 .  
+# as.factor(Farm)5  -0.05214    0.24889  -0.209  0.83449    
+# as.factor(Farm)8  -0.94291    0.23152  -4.073 9.20e-05 ***
+# as.factor(Farm)12 -0.86209    0.26584  -3.243  0.00160 ** 
+# as.factor(Farm)14 -1.24697    0.23889  -5.220 9.47e-07 ***
+# as.factor(Farm)51 -0.52166    0.25022  -2.085  0.03959 *  
+#   ---
+#   Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+# 
+# Residual standard error: 0.6602 on 102 degrees of freedom
+# Multiple R-squared:  0.3957,	Adjusted R-squared:  0.3424 
+# F-statistic: 7.421 on 9 and 102 DF,  p-value: 2.863e-08
+
+### Species count modeling
+mage = lm(nsp ~ log(EPG) + agroup + as.factor(Farm), data = dfage)
+summary.aov(mage)
+#                  Df Sum Sq Mean Sq F value  Pr(>F)    
+# log(EPG)          1    6.4    6.42   0.673 0.41404    
+# agroup            1   97.5   97.47  10.216 0.00185 ** 
+# as.factor(Farm)   7  552.2   78.88   8.268 5.8e-08 ***
+# Residuals       102  973.2    9.54
+
+summary(mage)
+# Call:
+#   lm(formula = nsp ~ log(EPG + 50) + agroup + as.factor(Farm), 
 #      data = dfage)
 # 
 # Residuals:
 #   Min      1Q  Median      3Q     Max 
-# -7.4260 -1.9868  0.1529  1.5664  7.7120 
+# -7.6020 -2.0053  0.1118  1.7607  8.0052 
 # 
 # Coefficients:
-#                              Estimate Std. Error t value Pr(>|t|)    
-# (Intercept)                   8.34638    3.46048   2.412  0.01767 *  
-# log(EPG)                      0.05532    0.45968   0.120  0.90444    
-# poly(agroup, 2, raw = TRUE)1  0.76008    0.55277   1.375  0.17216    
-# poly(agroup, 2, raw = TRUE)2 -0.10501    0.05467  -1.921  0.05755 .  
-# as.factor(Farm)2              0.34604    1.10432   0.313  0.75466    
-# as.factor(Farm)4             -2.89261    1.10550  -2.617  0.01024 *  
-# as.factor(Farm)5              3.70648    1.10881   3.343  0.00116 ** 
-# as.factor(Farm)8             -1.00328    1.17628  -0.853  0.39572    
-# as.factor(Farm)12            -0.56477    1.32091  -0.428  0.66988    
-# as.factor(Farm)14             1.10297    1.29607   0.851  0.39678    
-# as.factor(Farm)51             5.51882    1.11163   4.965  2.8e-06 ***
+#   Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)       10.204391   3.749608   2.721  0.00764 ** 
+# log(EPG + 50)     -0.041951   0.514019  -0.082  0.93511    
+# agroup            -0.279559   0.112735  -2.480  0.01478 *  
+# as.factor(Farm)2   1.001187   1.066247   0.939  0.34996    
+# as.factor(Farm)4  -2.170266   1.057018  -2.053  0.04261 *  
+# as.factor(Farm)5   3.796384   1.123016   3.381  0.00103 ** 
+# as.factor(Farm)8  -0.532456   1.170427  -0.455  0.65013    
+# as.factor(Farm)12  0.003649   1.311520   0.003  0.99779    
+# as.factor(Farm)14  1.889326   1.250961   1.510  0.13406    
+# as.factor(Farm)51  5.849425   1.118646   5.229 9.11e-07 ***
 #   ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+#   Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 # 
-# Residual standard error: 3.049 on 101 degrees of freedom
-# Multiple R-squared:  0.4237,	Adjusted R-squared:  0.3667 
-# F-statistic: 7.427 on 10 and 101 DF,  p-value: 9.624e-09
+# Residual standard error: 3.089 on 102 degrees of freedom
+# Multiple R-squared:  0.4027,	Adjusted R-squared:   0.35 
+# F-statistic:  7.64 on 9 and 102 DF,  p-value: 1.679e-08
 
 
 ###-------======== Indicator species associated with age =======---------
@@ -182,13 +219,14 @@ dasp_to_plot$Species = as.character(dasp_to_plot$variable)
 dasp_to_plot$Species[dasp_to_plot$Species=='C.ashworthi']='C. ashworthi'
 dasp_to_plot$Species[dasp_to_plot$Species=='C.labiatus']='C. labiatus'
 
+
 pdf(file = 'Figure2rev.pdf')
 ggplot(dasp_to_plot,
-       aes(y = value, x = age, group = paste0(age,Species),
+       aes(y = log(value+1), x = age, group = paste0(age,Species),
            fill = variable)) +
   facet_wrap(~ Species, scales = 'free') +
   geom_boxplot() + 
-  xlab('Age (in years)') + ylab('Worm count') +
+  xlab('Age (in years)') + ylab('log(Worm count +1)') +
   theme_classic() +
   scale_x_continuous(limits = c(0,10),breaks = seq(0,10,2))+
   scale_fill_manual(values = ggsci::pal_jco()(2)) +
@@ -197,9 +235,24 @@ ggplot(dasp_to_plot,
         strip.text = element_text(size = 12, face = 'italic'),
         legend.position = 'none') 
 dev.off()
-  
 
-####--------------======== Pattern of beta-diversity ====-----------------
+p2rev = ggplot(dasp_to_plot,
+       aes(y = log(1+value), x = age, group = paste0(age,Species),
+           fill = variable)) +
+  facet_wrap(~ Species, scales = 'free') +
+  geom_boxplot() + 
+  xlab('Age (in years)') + ylab('log(Worm count +1)') +
+  theme_classic() +
+  scale_x_continuous(limits = c(0,10),breaks = seq(0,10,2))+
+  scale_fill_manual(values = ggsci::pal_jco()(2)) +
+  theme(strip.background = element_blank(),
+        text = element_text(size = 12),
+        strip.text = element_text(size = 12, face = 'italic'),
+        legend.position = 'none') 
+
+ggsave(filename = 'Figure2rev.eps',plot = p2rev)
+
+####--------------======== Pattern of beta-diversity - all ====-----------------
 sp = dfage[,-c(1:8)]
 ord <- metaMDS(sp,try = 20,k=3, distance = 'bray')
 env = dfage[,c(2,6,5,8)]
@@ -222,6 +275,66 @@ fit$vectors
 env2 = dfage[,c(2,3,5,8)]
 env2$Farm = factor(env2$Farm)
 fit2 <- envfit(ord, env2, perm = 1000)
+
+NMDS = data.frame(MDS1 = ord$points[,1], MDS2 = ord$points[,2])
+NMDS = cbind(NMDS,env2)
+vec.sp.df<-as.data.frame(fit2$vectors$arrows*sqrt(fit2$vectors$r))
+vec.sp.df$species<-rownames(vec.sp.df)
+NMDS$Operation = factor(match(NMDS$Farm,levels(NMDS$Farm)))
+NMDS$Sex = gsub('M-g','Gelding',NMDS$Sex)
+NMDS$Sex = gsub('F','Female',NMDS$Sex)
+NMDS$Sex = gsub('M','Male',NMDS$Sex)
+
+nmds_allsex_ukr = ggplot() + 
+  geom_point(data = NMDS, aes(x=MDS1, y=MDS2, col = Operation,shape = Sex), 
+             alpha = .4, size = 3) +
+  geom_segment(data=vec.sp.df,aes(x=0,xend=NMDS1,y=0,yend=NMDS2),
+               arrow = arrow(length = unit(0.5, "cm")),colour="grey") + 
+  geom_text(data = vec.sp.df,aes(x=NMDS1,y=NMDS2,label=species),size=5) +
+  #coord_fixed()+
+  theme(legend.position = 'bottom')
+
+cairo_ps(file = paste0('./MetaAnalysis2/PapierII/ParasiteVectors/Review2/FigureS1rev.eps'),
+         fallback_resolution = 600)
+print(nmds_allsex_ukr)
+dev.off()
+
+####--------------======== Pattern of beta-diversity - females only // same conclusions ====-----------------
+sp = dfage[dfage$Sex=='F',-c(1:8)]
+ord <- metaMDS(sp,try = 20,k=3, distance = 'bray')
+env = dfage[dfage$Sex=='F',c(2,6,5,8)]
+env$Farm = factor(env$Farm)
+env$agroup = factor(env$agroup)
+fit <- envfit(ord, env , perm = 1000)
+
+fit$factors
+# Goodness of fit:
+#            r2   Pr(>r)    
+# Farm   0.2874 0.000999 ***
+# agroup 0.1337 0.014985 *  
+# Sex    0.0744 0.001998 ** 
+
+fit$vectors
+#           NMDS1    NMDS2     r2   Pr(>r)   
+# EPG     0.14946 -0.98877 0.0168 0.3876
+
+## Age as a continuous variable
+env2 = dfage[dfage$Sex=='F',c(2,3,5,8)]
+env2$Farm = factor(env2$Farm)
+fit2 <- envfit(ord, env2, perm = 1000)
+
+NMDS = data.frame(MDS1 = ord$points[,1], MDS2 = ord$points[,2])
+NMDS = cbind(NMDS,env2)
+vec.sp.df<-as.data.frame(fit2$vectors$arrows*sqrt(fit2$vectors$r))
+vec.sp.df$species<-rownames(vec.sp.df)
+
+ggplot() + 
+  geom_point(data = NMDS, aes(x=MDS1, y=MDS2, col = Farm,shape = Sex), alpha = .4, size = 3) +
+  geom_segment(data=vec.sp.df,aes(x=0,xend=NMDS1,y=0,yend=NMDS2),
+               arrow = arrow(length = unit(0.5, "cm")),colour="grey") + 
+  geom_text(data = vec.sp.df,aes(x=NMDS1,y=NMDS2,label=species),size=5) +
+  #coord_fixed()+
+  theme(legend.position = 'bottom')
 
 fit2$vectors
 #        NMDS1    NMDS2     r2   Pr(>r)   
@@ -357,7 +470,7 @@ fig_adi = ggplot(adm,
   geom_errorbar(data=adm[adm$variable=='Simulated',], 
                 mapping=aes(x=part, ymin=quant2.5, ymax=quant97.5), 
                 width=0.1) +
-  geom_point(size = 3,alpha = .5) + 
+  geom_point(size = 3) + 
   scale_y_continuous(limits = c(0,.8), breaks = seq(0,.8,0.2)) +
   scale_color_manual(values = c(viridis_pal(option='D')(4)[c(1,3)])) +
   ylab('Percent of gamma') + xlab('Diversity partition') +
@@ -367,10 +480,11 @@ fig_adi = ggplot(adm,
 fig_adi
 
 ## Export
-pdf(file = './Figure2.pdf')
+pdf(file = '/Figure2.pdf')
 fig_adi
 invisible(dev.off())
 
+ggsave(filename='./MetaAnalysis2/PapierII/ParasiteVectors/Review2/Figure2rev.eps',plot=fig_adi)
 
 ##
 

@@ -5,6 +5,8 @@ require(ggplot2)
 require(dplyr)
 require(lme4)
 require(lmerTest)
+require(partR2)
+source('~/Documents/Scripts/multiplot.R')
 
 theme_set(theme_bw())
 
@@ -98,7 +100,8 @@ table(eastEU$variable,eastEU$Region)
 
 
 ## Check what species differ between communities
-EastEU.com = reshape2::dcast(Horse + Farm + Age + Sex + EPG + Region ~ variable, value.var = 'value', data = eastEU)
+EastEU.com = reshape2::dcast(Horse + Farm + Age + Sex + EPG + Region ~ variable, 
+                             value.var = 'value', data = eastEU)
 EastEU.com$Sex = factor(toupper(substr(EastEU.com$Sex,1,1)))
 EastEU.com$Farm = factor(EastEU.com$Farm)
 EastEU.com[is.na(EastEU.com)] = 0
@@ -137,86 +140,445 @@ sha = EastEU.com[,41]
 sim = EastEU.com[,42]
 
 for(i in 1:dim(EastEU.com.sp)[1]){
-  gi[i] = H(EastEU.com.sp[i,], lev = "alpha", wts = FALSE, q = 2, HCDT = FALSE, gini = TRUE, 
-            boot = FALSE, boot.arg = list(s.sizes = NULL, num.iter = 100))
+#  gi[i] = H(EastEU.com.sp[i,], lev = "alpha", wts = FALSE, q = 2, HCDT = FALSE, gini = TRUE, 
+#            boot = FALSE, boot.arg = list(s.sizes = NULL, num.iter = 100))
+  gi[i] = diversity(EastEU.com.sp[i,],index = 'simpson')
 }
+EastEU.com$gi = gi
+EastEU.com$nsp = nsp
 
-mgi = lmer(gi ~ Region*(log(EPG+50)) + Sex + (1|Farm), data = EastEU.com)
-plot(mgi)
-summary(mgi)
-#Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
-# Formula: gi ~ Region * (log(EPG + 50)) + Sex + (1 | Farm)
-#    Data: EastEU.com
-# 
-# REML criterion at convergence: -233.1
-# 
-# Scaled residuals: 
-#      Min       1Q   Median       3Q      Max 
-# -2.78280 -0.43775  0.06288  0.62038  1.87570 
-# 
-# Random effects:
-#  Groups   Name        Variance Std.Dev.
-#  Farm     (Intercept) 0.007726 0.0879  
-#  Residual             0.012927 0.1137  
-# Number of obs: 188, groups:  Farm, 13
-# 
-# Fixed effects:
-#                          Estimate Std. Error        df t value Pr(>|t|)    
-# (Intercept)               0.56573    0.15824 146.82566   3.575 0.000474 ***
-# RegionUKR                 0.12964    0.19203 157.36034   0.675 0.500581    
-# log(EPG + 50)             0.03367    0.02340 172.68340   1.439 0.152076    
-# SexM                      0.03393    0.02100 177.68566   1.616 0.107834    
-# RegionUKR:log(EPG + 50)  -0.04278    0.02851 177.14497  -1.500 0.135294    
-# ---
-# Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-# 
-# Correlation of Fixed Effects:
-#             (Intr) RgnUKR l(EP+5 SexM  
-# RegionUKR   -0.832                     
-# log(EPG+50) -0.910  0.762              
-# SexM         0.072 -0.175 -0.100       
-# RUKR:(EPG+5  0.753 -0.928 -0.829  0.163
+##### Data exploration
+EastEU.com$Country = 'Ukraine'
+EastEU.com$Country[EastEU.com$Region=='POL'] = 'Poland'
+EastEU.com$FEC = EastEU.com$EPG
 
-MuMIn::r.squaredGLMM(mgi)
-#            R2m       R2c
-# [1,] 0.1238005 0.4515636
+a0=ggplot(EastEU.com,aes(x = Age,fill=Country)) + theme_classic()+
+  geom_density(alpha = .3)+
+  theme(legend.position = c(0.8,0.8))+xlab('Age (in years)')
+b0=ggplot(EastEU.com,aes(y = Age, x = log(EPG+50))) +
+  geom_point() + facet_wrap(~ Country,ncol=1,scales='free_x') +theme_classic()+
+  geom_smooth(method = 'lm')+
+  theme(legend.position = 'none',strip.background = element_blank())
 
-msp = lmer(nsp ~ Region*log(EPG+50) + Sex + (1|Farm), data = EastEU.com)
+a=ggplot(EastEU.com,aes(y = nsp, x = log(EPG+50),col = Country)) +
+  geom_smooth(method = 'lm',col='black')+
+  geom_point() + facet_wrap(~ Country,ncol=1,scales='free_x')+ylab('Species richness')+
+  theme_classic()+
+  theme(legend.position = 'none',strip.background = element_blank())
+
+b=ggplot(EastEU.com,aes(y = nsp, x = Age,col = Country)) + 
+  geom_smooth(method = 'lm',col='black')+theme_classic()+
+  geom_point() + facet_wrap(~ Country,ncol=1,scales='free_x')+ylab('Species richness')+
+  theme(legend.position = 'none',strip.background = element_blank())
+
+a1=ggplot(EastEU.com,aes(y = sha, x = log(EPG+50),col = Country)) +
+  geom_smooth(method = 'lm',col='black')+
+  geom_point() + facet_wrap(~ Country,ncol=1,scales='free_x')+ylab('Shannon index')+
+  theme_classic()+
+  theme(legend.position = 'none',strip.background = element_blank())
+
+b1=ggplot(EastEU.com,aes(y = sha, x = Age,col = Country)) + 
+  geom_smooth(method = 'lm',col='black')+theme_classic()+
+  geom_point() + facet_wrap(~ Country,ncol=1,scales='free_x')+ylab('Shannon index')+
+  theme(legend.position = 'none',strip.background = element_blank())
+
+a2=ggplot(EastEU.com,aes(y = gi, x = log(EPG+50),col = Country)) + 
+  geom_smooth(method = 'lm',col='black')+theme_classic()+
+  geom_point()+facet_wrap(~ Country,ncol=1,scales='free_x')+ylab('Gini-Simpson index')+
+  theme(legend.position = 'none',strip.background = element_blank())
+
+b2=ggplot(EastEU.com,aes(y = gi, x = Age,col = Country)) + 
+  geom_smooth(method = 'lm',col='black')+theme_classic()+
+  geom_point()+facet_wrap(~ Country,ncol=1,scales='free_x')+ylab('Gini-Simpson index')+
+  theme(legend.position = 'none',strip.background = element_blank())
+
+p = multiplot(a,a1,a2,
+          b,b1,b2,cols=2)
+
+##### PCA
+EastEU.com$Region= as.factor(EastEU.com$Region)
+
+pc = ade4::dudi.mix(EastEU.com[EastEU.com$Region=='UKR',c(3:5,44)],nf=4,scannf = F)
+ade4::s.corcircle(pc$co)
+
+pc = ade4::dudi.mix(EastEU.com[EastEU.com$Region=='UKR',c(3:5,43)],nf=4,scannf = F)
+ade4::s.corcircle(pc$co)
+
+### Younger horses in Ukraine
+t.test(Age ~ Region, data = EastEU.com)
+# Welch Two Sample t-test
+# 
+# data:  Age by Region
+# t = 11.007, df = 40.659, p-value = 9.1e-14
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+#   9.186066 13.315537
+# sample estimates:
+#   mean in group POL mean in group UKR 
+# 15.968750          4.717949
+
+##### Correlations within country
+##Ukraine - nsp vs. FEC
+Hmisc::rcorr(EastEU.com$nsp[EastEU.com$Region=='UKR'], ### NSP
+             EastEU.com$EPG[EastEU.com$Region=='UKR'],
+             type='spearman')
+# x     y
+# x  1.00 -0.05
+# y -0.05  1.00
+# 
+# n= 156 
+# 
+# 
+# P
+# x      y     
+# x        0.5581
+# y 0.5581
+
+##Ukraine - Gini vs. FEC
+Hmisc::rcorr(EastEU.com$gi[EastEU.com$Region=='UKR'], ### Gini
+             EastEU.com$EPG[EastEU.com$Region=='UKR'],
+             type='spearman')
+# x    y
+# x  1.0 -0.2
+# y -0.2  1.0
+# 
+# n= 156 
+# 
+# 
+# P
+# x      y     
+# x        0.0118
+# y 0.0118   
+
+##Ukraine - nsp vs. Age
+Hmisc::rcorr(EastEU.com$nsp[EastEU.com$Region=='UKR'], ### NSP
+             EastEU.com$Age[EastEU.com$Region=='UKR'],
+             type='spearman')
+# x     y
+# x  1.00 -0.16
+# y -0.16  1.00
+# 
+# n= 156 
+# 
+# 
+# P
+# x      y     
+# x        0.0402
+# y 0.0402 
+
+##Ukraine - Gini vs. Age
+Hmisc::rcorr(EastEU.com$gi[EastEU.com$Region=='UKR'], ### Gini
+             EastEU.com$Age[EastEU.com$Region=='UKR'],
+             type='spearman')
+# x     y
+# x  1.00 -0.02
+# y -0.02  1.00
+# 
+# n= 156 
+# 
+# 
+# P
+# x      y     
+# x        0.7719
+# y 0.7719    
+
+##Poland
+Hmisc::rcorr(EastEU.com$nsp[EastEU.com$Region=='POL'], ### nsp
+             EastEU.com$EPG[EastEU.com$Region=='POL'],
+             type='spearman')
+# x    y
+# x 1.00 0.37
+# y 0.37 1.00
+# 
+# n= 32 
+# 
+# 
+# P
+# x      y     
+# x        0.0351
+# y 0.0351
+
+
+Hmisc::rcorr(EastEU.com$gi[EastEU.com$Region=='POL'], ### Gini
+             EastEU.com$EPG[EastEU.com$Region=='POL'],
+             type='spearman')
+# x    y
+# x 1.00 0.17
+# y 0.17 1.00
+# 
+# n= 32 
+# 
+# 
+# P
+# x      y     
+# x        0.3395
+# y 0.3395     
+
+##POLAND - nsp vs. Age
+Hmisc::rcorr(EastEU.com$nsp[EastEU.com$Region=='POL'], ### NSP
+             EastEU.com$Age[EastEU.com$Region=='POL'],
+             type='spearman')
+# x     y
+# x  1.00 -0.52
+# y -0.52  1.00
+# 
+# n= 32 
+# 
+# 
+# P
+# x      y     
+# x        0.0022
+# y 0.0022 
+
+##POLAND - Gini vs. Age
+Hmisc::rcorr(EastEU.com$gi[EastEU.com$Region=='POL'], ### Gini
+             EastEU.com$Age[EastEU.com$Region=='POL'],
+             type='spearman')
+# x     y
+# x  1.00 -0.02
+# y -0.02  1.00
+# 
+# n= 156 
+# 
+# 
+# P
+# x      y     
+# x        0.7719
+# y 0.7719  
+
+#### Overall correlations
+Hmisc::rcorr(EastEU.com$nsp, ### nsp vs. FEC
+             EastEU.com$EPG,
+             type='spearman')
+# x    y
+# x 1.00 0.02
+# y 0.02 1.00
+# 
+# n= 188 
+# 
+# 
+# P
+# x      y     
+# x        0.7373
+# y 0.7373
+
+Hmisc::rcorr(EastEU.com$gi, ### Gini vs. FEC
+             EastEU.com$EPG,
+             type='spearman')
+# x     y
+# x  1.00 -0.14
+# y -0.14  1.00
+# 
+# n= 188 
+# 
+# 
+# P
+# x      y     
+# x        0.0614
+# y 0.0614
+
+Hmisc::rcorr(EastEU.com$nsp, ### Gini vs. Age
+             EastEU.com$Age,
+             type='spearman')
+# x    y
+# x  1.0 -0.1
+# y -0.1  1.0
+# 
+# n= 188 
+# 
+# 
+# P
+# x      y     
+# x        0.1633
+# y 0.163
+
+Hmisc::rcorr(EastEU.com$gi, ### Gini vs. Age
+             EastEU.com$Age,
+             type='spearman')
+#     x   y
+# x 1.0 0.2
+# y 0.2 1.0
+# 
+# n= 188 
+# 
+# 
+# P
+# x      y     
+# x        0.0057
+# y 0.0057
+
+Hmisc::rcorr(EastEU.com$Age[EastEU.com$Region=='UKR'], ### NSP
+             EastEU.com$EPG[EastEU.com$Region=='UKR'],
+             type='spearman')
+# x     y
+# x  1.00 -0.19
+# y -0.19  1.00
+# 
+# n= 156 
+# 
+# 
+# P
+# x      y     
+# x        0.0193
+# y 0.0193  
+
+Hmisc::rcorr(EastEU.com$Age[EastEU.com$Region=='POL'], ### NSP
+             EastEU.com$EPG[EastEU.com$Region=='POL'],
+             type='spearman')
+# x     y
+# x  1.00 -0.14
+# y -0.14  1.00
+# 
+# n= 32 
+# 
+# 
+# P
+# x      y     
+# x        0.4351
+# y 0.4351
+
+#####---- Modeling
+colnames(EastEU.com)[6] = 'Country' ## change Region to Country
+
+### Note: Country and Age are confounded (older horses in Poland)
+### Farm account for country effect (n = 2 Polish farms)
+
+#### Species richness - order 0 - equal contribution for each species // NSP
+msp = lmer(nsp ~ Age + log(FEC + 50) + Sex + (1|Farm), 
+           data = EastEU.com)
 plot(msp)
 summary(msp)
 # Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
-# Formula: nsp ~ Region * log(EPG + 50) + Sex + (1 | Farm)
+# Formula: nsp ~ Age + log(FEC + 50) + Sex + (1 | Farm)
 #    Data: EastEU.com
 # 
-# REML criterion at convergence: 955.3
+# REML criterion at convergence: 959
 # 
 # Scaled residuals: 
 #     Min      1Q  Median      3Q     Max 
-# -2.5722 -0.6616 -0.0114  0.5916  3.2827 
+# -2.7743 -0.5760  0.0270  0.5638  3.4283 
 # 
 # Random effects:
 #  Groups   Name        Variance Std.Dev.
-#  Farm     (Intercept) 8.761    2.960   
-#  Residual             8.287    2.879   
+#  Farm     (Intercept) 7.998    2.828   
+#  Residual             8.047    2.837   
 # Number of obs: 188, groups:  Farm, 13
 # 
 # Fixed effects:
-#                         Estimate Std. Error       df t value Pr(>|t|)  
-# (Intercept)               3.5047     4.2386 105.5473   0.827   0.4102  
-# RegionUKR                 4.5107     5.1018 124.7797   0.884   0.3783  
-# log(EPG + 50)             1.2063     0.5929 172.4988   2.035   0.0434 *
-# SexM                      0.5318     0.5337 175.6782   0.996   0.3204  
-# RegionUKR:log(EPG + 50)  -0.7643     0.7245 175.3585  -1.055   0.2929  
+#                Estimate Std. Error        df t value Pr(>|t|)    
+# (Intercept)     8.21292    2.35142 167.17920   3.493 0.000612 ***
+# Age            -0.13641    0.05444 176.61963  -2.506 0.013124 *  
+# log(FEC + 50)   0.57148    0.33197 179.10754   1.721 0.086894 .  
+# SexM            0.33282    0.53103 178.13304   0.627 0.531634    
 # ---
 # Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 # 
 # Correlation of Fixed Effects:
-#             (Intr) RgnUKR l(EP+5 SexM  
-# RegionUKR   -0.838                     
-# log(EPG+50) -0.861  0.726              
-# SexM         0.069 -0.165 -0.101       
-# RUKR:(EPG+5  0.710 -0.888 -0.826  0.160
+#             (Intr) Age    l(EP+5
+# Age         -0.295              
+# log(FEC+50) -0.920  0.138       
+# SexM        -0.182  0.218  0.084
 
 MuMIn::r.squaredGLMM(msp)
+## R2m = marginal R2, variance explained by fixed effects
+## R2c = Conditional R2, variance explained by the model
 #             R2m       R2c
-# [1,] 0.01758184 0.5224593
+# [1,] 0.06459248 0.5308681
+
+##### Partition Variance across fixed effects
+R2_nsp <- partR2(msp, 
+                 partvars = c("Age", "log(FEC + 50)","Sex"),
+                 R2_type = 'marginal',
+                 max_level = 1,
+                 data = EastEU.com,
+                 nboot = 100)
+
+R2_nsp
+#R2 (marginal) and 95% CI for the full model: 
+#   R2     CI_lower CI_upper nboot ndf
+#   0.0646 0.0143   0.1605   100   4  
+# 
+# ----------
+#   
+#Part (semi-partial) R2:
+# Predictor(s)  R2     CI_lower CI_upper nboot ndf
+# Model         0.0646 0.0143   0.1605   100   4  
+# Age           0.0476 0.0000   0.1421   100   3  
+# log(FEC + 50) 0.0101 0.0000   0.1041   100   3  
+# Sex           0.0000 0.0000   0.0917   100   3  
+
+p1 = forestplot(R2_nsp,type = 'R2',point_size = 4,text_size = 14)
+p1
+
+####------- Gini index - order 2 
+mgi = lmer(gi ~ Age + log(FEC + 50) + Sex + (1|Farm), 
+           data = EastEU.com)
+plot(mgi)
+
+summary(mgi)
+# Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+# Formula: gi ~ Age + log(FEC + 50) + Sex + (1 | Farm)
+#    Data: EastEU.com
+# 
+# REML criterion at convergence: -226.6
+# 
+# Scaled residuals: 
+#     Min      1Q  Median      3Q     Max 
+# -3.0177 -0.4201  0.1076  0.5746  1.8540 
+# 
+# Random effects:
+#  Groups   Name        Variance Std.Dev.
+#  Farm     (Intercept) 0.01093  0.1045  
+#  Residual             0.01293  0.1137  
+# Number of obs: 188, groups:  Farm, 13
+# 
+# Fixed effects:
+#                 Estimate Std. Error         df t value Pr(>|t|)    
+# (Intercept)     0.652675   0.093300 170.789641   6.995 5.74e-11 ***
+# Age            -0.001927   0.002162 171.070864  -0.891    0.374    
+# log(FEC + 50)   0.003042   0.013282 179.848892   0.229    0.819    
+# SexM            0.033178   0.021253 178.748654   1.561    0.120    
+# ---
+# Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+# 
+# Correlation of Fixed Effects:
+#             (Intr) Age    l(EP+5
+# Age         -0.297              
+# log(FEC+50) -0.928  0.138       
+# SexM        -0.184  0.217  0.086
+
+MuMIn::r.squaredGLMM(mgi)
+## R2m = marginal R2, variance explained by fixed effectst
+## R2c = Conditional R2, variance explained by the model
+#            R2m       R2c
+#[1,] 0.01745823 0.4675143
+
+# Partition Variance across fixed effects
+R2_mgi <- partR2(mgi,
+                 partvars = c("Age", "log(FEC + 50)","Sex"),
+                 R2_type = 'marginal',
+                 max_level = 1,
+                 data = EastEU.com, 
+                 nboot = 100)
+R2_mgi
+# R2 (marginal) and 95% CI for the full model: 
+#   R2     CI_lower CI_upper nboot ndf
+# 0.0175 0.0051   0.0961   100   4  
+# 
+# ----------
+#   
+#   Part (semi-partial) R2:
+# Predictor(s)  R2     CI_lower CI_upper nboot ndf
+# Model         0.0175 0.0051   0.0961   100   4  
+# Age           0.0063 0.0000   0.0852   100   3  
+# log(FEC + 50) 0.0000 0.0000   0.0789   100   3  
+# Sex           0.0056 0.0000   0.0844   100   3 
+
+p2 = forestplot(R2_mgi,type = 'R2',point_size = 4, text_size = 14)
+p2
+
+multiplot(p1,p2,cols=2)
+
+postscript('./MetaAnalysis2/PapierII/ParasiteVectors/Review2/Figure1rev.eps')
+print(multiplot(p1,p2,cols=2))
+dev.off()

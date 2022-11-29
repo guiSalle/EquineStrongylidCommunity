@@ -485,8 +485,9 @@ for (modeltype in 1:2){
                                        c(1,2), mean2))
       }
       
-      pdf(file = paste0('ROCcurves_Normandy_model',model,'.pdf'))
-      par(mfrow = c(5,3))
+      cairo_ps(file = paste0('ROCcurves_Normandy_model',model,".eps"),
+               fallback_resolution = 600)
+      par(mfrow = c(6,3))
       for(i in order(m$spNames)){
         plot(pROC::roc(m$Y[,i],mPredY[,i]),main = sp2[i],xlim=c(1,0),ylim = c(0,1))
       }
@@ -581,77 +582,182 @@ corr_abu = corr_modelT2_model1
 corr_abu[lower.tri(corr_abu)] <- corr_modelT2_model2[lower.tri(corr_modelT2_model2)]
 
 ### #Give species their full names
-rownames(corr_pa) = gsub('P.impariden.','P.imparidentatum', rownames(corr_pa))
-rownames(corr_pa) = gsub('C.ultrajec.','C.ultrajectinus', rownames(corr_pa))
-rownames(corr_pa) = gsub('C.longibur.','C.longibursatus', rownames(corr_pa))
-rownames(corr_pa) = gsub('C.tetracan.','C.tetracanthum', rownames(corr_pa))
-rownames(corr_pa) = gsub('C.leptosto.','C.leptostomum', rownames(corr_pa))
-rownames(corr_pa) = gsub('C.labiatum','C.labiatus', rownames(corr_pa))
-rownames(corr_pa) = gsub('C.labratum','C.labratus', rownames(corr_pa))
-rownames(corr_pa) = gsub('C.coronatum','C.coronatus', rownames(corr_pa))
-colnames(corr_pa) = gsub('P.impariden.','P.imparidentatum', colnames(corr_pa))
-colnames(corr_pa) = gsub('C.ultrajec.','C.ultrajectinus', colnames(corr_pa))
-colnames(corr_pa) = gsub('C.longibur.','C.longibursatus', colnames(corr_pa))
-colnames(corr_pa) = gsub('C.tetracan.','C.tetracanthum', colnames(corr_pa))
-colnames(corr_pa) = gsub('C.leptosto.','C.leptostomum', colnames(corr_pa))
-colnames(corr_pa) = gsub('C.labiatum','C.labiatus', colnames(corr_pa))
-colnames(corr_pa) = gsub('C.labratum','C.labratus', colnames(corr_pa))
-colnames(corr_pa) = gsub('C.coronatum','C.coronatus', colnames(corr_pa))
-
-rownames(corr_abu) = gsub('P.impariden.','P.imparidentatum', rownames(corr_abu))
-rownames(corr_abu) = gsub('C.ultrajec.','C.ultrajectinus', rownames(corr_abu))
-rownames(corr_abu) = gsub('C.longibur.','C.longibursatus', rownames(corr_abu))
-rownames(corr_abu) = gsub('C.tetracan.','C.tetracanthum', rownames(corr_abu))
-rownames(corr_abu) = gsub('C.leptosto.','C.leptostomum', rownames(corr_abu))
-colnames(corr_abu) = gsub('C.labiatum','C.labiatus', colnames(corr_abu))
-colnames(corr_abu) = gsub('C.labratum','C.labratus', colnames(corr_abu))
-colnames(corr_abu) = gsub('C.coronatum','C.coronatus', colnames(corr_abu))
-colnames(corr_abu) = gsub('P.impariden.','P.imparidentatum', colnames(corr_abu))
-colnames(corr_abu) = gsub('C.ultrajec.','C.ultrajectinus', colnames(corr_abu))
-colnames(corr_abu) = gsub('C.longibur.','C.longibursatus', colnames(corr_abu))
-colnames(corr_abu) = gsub('C.tetracan.','C.tetracanthum', colnames(corr_abu))
-colnames(corr_abu) = gsub('C.leptosto.','C.leptostomum', colnames(corr_abu))
-colnames(corr_abu) = gsub('C.labiatum','C.labiatus', colnames(corr_abu))
-colnames(corr_abu) = gsub('C.labratum','C.labratus', colnames(corr_abu))
-colnames(corr_abu) = gsub('C.coronatum','C.coronatus', colnames(corr_abu))
+# rownames(corr_pa) = gsub('P.impariden.','P.imparidentatum', rownames(corr_pa))
+# rownames(corr_pa) = gsub('C.ultrajec.','C.ultrajectinus', rownames(corr_pa))
+# rownames(corr_pa) = gsub('C.longibur.','C.longibursatus', rownames(corr_pa))
+# rownames(corr_pa) = gsub('C.tetracan.','C.tetracanthum', rownames(corr_pa))
+# rownames(corr_pa) = gsub('C.leptosto.','C.leptostomum', rownames(corr_pa))
+# rownames(corr_pa) = gsub('C.labiatum','C.labiatus', rownames(corr_pa))
+# rownames(corr_pa) = gsub('C.labratum','C.labratus', rownames(corr_pa))
+# rownames(corr_pa) = gsub('C.coronatum','C.coronatus', rownames(corr_pa))
+# colnames(corr_pa) = gsub('P.impariden.','P.imparidentatum', colnames(corr_pa))
+# colnames(corr_pa) = gsub('C.ultrajec.','C.ultrajectinus', colnames(corr_pa))
+# colnames(corr_pa) = gsub('C.longibur.','C.longibursatus', colnames(corr_pa))
+# colnames(corr_pa) = gsub('C.tetracan.','C.tetracanthum', colnames(corr_pa))
+# colnames(corr_pa) = gsub('C.leptosto.','C.leptostomum', colnames(corr_pa))
+# colnames(corr_pa) = gsub('C.labiatum','C.labiatus', colnames(corr_pa))
+# colnames(corr_pa) = gsub('C.labratum','C.labratus', colnames(corr_pa))
+# colnames(corr_pa) = gsub('C.coronatum','C.coronatus', colnames(corr_pa))
+# 
+# rownames(corr_abu) = gsub('P.impariden.','P.imparidentatum', rownames(corr_abu))
+# rownames(corr_abu) = gsub('C.ultrajec.','C.ultrajectinus', rownames(corr_abu))
+# rownames(corr_abu) = gsub('C.longibur.','C.longibursatus', rownames(corr_abu))
+# rownames(corr_abu) = gsub('C.tetracan.','C.tetracanthum', rownames(corr_abu))
+# rownames(corr_abu) = gsub('C.leptosto.','C.leptostomum', rownames(corr_abu))
+# colnames(corr_abu) = gsub('C.labiatum','C.labiatus', colnames(corr_abu))
+# colnames(corr_abu) = gsub('C.labratum','C.labratus', colnames(corr_abu))
+# colnames(corr_abu) = gsub('C.coronatum','C.coronatus', colnames(corr_abu))
+# colnames(corr_abu) = gsub('P.impariden.','P.imparidentatum', colnames(corr_abu))
+# colnames(corr_abu) = gsub('C.ultrajec.','C.ultrajectinus', colnames(corr_abu))
+# colnames(corr_abu) = gsub('C.longibur.','C.longibursatus', colnames(corr_abu))
+# colnames(corr_abu) = gsub('C.tetracan.','C.tetracanthum', colnames(corr_abu))
+# colnames(corr_abu) = gsub('C.leptosto.','C.leptostomum', colnames(corr_abu))
+# colnames(corr_abu) = gsub('C.labiatum','C.labiatus', colnames(corr_abu))
+# colnames(corr_abu) = gsub('C.labratum','C.labratus', colnames(corr_abu))
+# colnames(corr_abu) = gsub('C.coronatum','C.coronatus', colnames(corr_abu))
 
 ### Save to figure
-dfpa = reshape2::melt(corr_pa) ##Var1 = x, Var2 = y
-dfpa$value[dfpa$value==0]=NA
-
-p1 = ggplot(dfpa,aes(x = Var1, y = Var2, fill = value)) +
-  geom_tile() +
-  scale_fill_gradientn(colors = viridis_pal(option='D')(100),
-                       na.value = 'white') +
-  xlab('') + ylab('') +
-  theme(legend.position = 'bottom',text = element_text(size = 12),
-        axis.text.x = element_text(angle=90,hjust=0.95,vjust=0.2),
-        legend.text = element_text(size = 8, angle=45, vjust = .5),
-        legend.title = element_blank())+
-  labs('Co-occurrence')
-
-dfabu = reshape2::melt(corr_abu) ##Var1 = x, Var2 = y
-dfabu$value[dfabu$value==0]=NA
-
-p2 = ggplot(dfabu,aes(x = Var1, y = Var2, fill = value)) +
-  geom_tile() +
-  scale_fill_gradientn(colors = viridis_pal(option='C')(100),
-                       na.value = 'white') +
-  xlab('') + ylab('') +
-  theme(legend.position = 'bottom',text = element_text(size = 12),
-        axis.text.x = element_text(angle=90,hjust=0.95,vjust=0.2),
-        legend.text = element_text(size = 8, angle=45, vjust =.5),
-        legend.title = element_blank()) +
-  labs(colour = 'Co-occurrence')
-
-pdf(file = './Figure4.pdf', width = 14, height= 8)
-multiplot(p1,p2,cols=2)
-dev.off()
+# dfpa = reshape2::melt(corr_pa) ##Var1 = x, Var2 = y
+# dfpa$value[dfpa$value==0]=NA
+# 
+# p1 = ggplot(dfpa,aes(x = Var1, y = Var2, fill = value)) +
+#   geom_tile() +
+#   scale_fill_gradientn(colors = viridis_pal(option='D')(100),
+#                        na.value = 'white') +
+#   xlab('') + ylab('') +
+#   theme(legend.position = 'bottom',text = element_text(size = 12),
+#         axis.text.x = element_text(angle=90,hjust=0.95,vjust=0.2),
+#         legend.text = element_text(size = 8, angle=45, vjust = .5),
+#         legend.title = element_blank())+
+#   labs('Co-occurrence')
+# 
+# dfabu = reshape2::melt(corr_abu) ##Var1 = x, Var2 = y
+# dfabu$value[dfabu$value==0]=NA
+# 
+# p2 = ggplot(dfabu,aes(x = Var1, y = Var2, fill = value)) +
+#   geom_tile() +
+#   scale_fill_gradientn(colors = viridis_pal(option='C')(100),
+#                        na.value = 'white') +
+#   xlab('') + ylab('') +
+#   theme(legend.position = 'bottom',text = element_text(size = 12),
+#         axis.text.x = element_text(angle=90,hjust=0.95,vjust=0.2),
+#         legend.text = element_text(size = 8, angle=45, vjust =.5),
+#         legend.title = element_blank()) +
+#   labs(colour = 'Co-occurrence')
+# 
+# pdf(file = './Figure4.pdf', width = 14, height= 8)
+# multiplot(p1,p2,cols=2)
+# dev.off()
 
 #### Export correlation matrices
 write.csv(corr_pa, file = 'CooccurrenceMatrix_PA_Normandy.csv',quote=F)
 write.csv(corr_abu, file = 'CooccurrenceMatrix_ABU_Normandy.csv',quote=F)
 
+
+#### Network visualization
+### Residual vs. raw - Presence/Absence
+#corr_modelT1_model1 raw
+#corr_modelT1_model2 residual
+corr_pa_raw = corr_modelT1_model1
+corr_pa_res = corr_modelT1_model2
+
+### Residual vs. raw - Abundance
+#corr_modelT2_model1 raw
+#corr_modelT2_model2 residual
+corr_abu_raw = corr_modelT2_model1 ## raw
+corr_abu_res = corr_modelT2_model2 ## raw
+
+
+### Network representation: P/A or Abu
+##### Network
+require(GGally)
+require(ggnetwork)
+require(network)
+
+### Remove disconnected species
+## Co-occurrences are scaled by 1/3 for visualization
+net.pa.raw = as.network.matrix(corr_pa_raw, matrix.type = 'adjacency',
+                               names.eval = 'weights',ignore.eval = F)
+net.pa.res = as.network.matrix(corr_pa_res, matrix.type = 'adjacency',
+                               names.eval = 'weights',ignore.eval = F)
+net.abu.raw = as.network.matrix(corr_abu_raw, matrix.type = 'adjacency',
+                                names.eval = 'weights',ignore.eval = F)
+net.abu.res = as.network.matrix(corr_abu_res, matrix.type = 'adjacency',
+                                names.eval = 'weights',ignore.eval = F)
+
+### SPecies
+factor(sort(unique(ggnetwork(net.abu.res)[,3])))
+# [1] C.calicatus      C.catinatum      C.coronatus      C.goldi          C.insigne       
+# [6] C.labiatus       C.labratus       C.leptostomum    C.longibursatus  C.minutus       
+# [11] C.nassatus       C.tetracanthum   C.ultrajectinus  P.imparidentatum T.serratus
+
+##Genus
+names1 = data.frame(vertex.names = factor(sort(unique(ggnetwork(net.pa.raw)[,3]))),
+                   gen = c('Cylicostephanus',
+                           'Cyathostomum',
+                           'Coronocyclus',
+                           'Cylicostephanus',
+                           'Cylicocyclus',
+                           'Coronocyclus',
+                           'Coronocyclus',
+                           'Cylicocyclus',
+                           'Cylicostephanus',
+                           'Cylicostephanus',
+                           'Cylicocyclus',
+                           'Cyathostomum',
+                           'Cylicocyclus',
+                           'Parapoteriostomum',
+                           'Triodontophorus'))
+
+gcol = viridis::viridis_pal()(6)[match(names1$gen,unique(names1$gen))]
+
+set.edge.attribute(net.pa.raw, "color", ifelse(net.pa.raw %e% "weights" > 0, "#d8b365", "#5ab4ac"))
+set.edge.attribute(net.pa.res, "color", ifelse(net.pa.res %e% "weights" > 0, "#d8b365", "#5ab4ac"))
+set.edge.attribute(net.abu.raw, "color", ifelse(net.abu.raw %e% "weights" > 0, "#d8b365", "#5ab4ac"))
+set.edge.attribute(net.abu.res, "color", ifelse(net.abu.res %e% "weights" > 0, "#d8b365", "#5ab4ac"))
+
+p1 = ggnet2(net.pa.raw,label = T, edge.color = 'color',
+            color = viridis::viridis_pal()(15), 
+            alpha = .7, edge.alpha = 0.15,
+            edge.size = "weights",
+            layout.exp = .45,
+            layout.par = list(repulse.rad = 60,
+                              area = 15200),
+            label.size= 3) + ggtitle('a')
+
+p2 = ggnet2(net.pa.res,label = T,edge.color = 'color',
+       color = viridis::viridis_pal()(15),
+       alpha = .7, edge.alpha = 0.15,
+       edge.size = "weights",
+       layout.exp = .45,
+       layout.par = list(repulse.rad = 60,
+                         area = 15200),
+       label.size= 3) + ggtitle('b')
+
+p3 = ggnet2(net.abu.raw,label = T,edge.color = 'color',
+       color = viridis::viridis_pal()(15),
+       alpha = .7, edge.alpha = 0.15,
+       edge.size = "weights",
+       layout.exp = .45,
+       layout.par = list(repulse.rad = 60,
+                         area = 15200),
+       label.size= 3) + ggtitle('c') 
+
+p4 = ggnet2(net.abu.res,label = T,edge.color = 'color',
+       color = viridis::viridis_pal()(15),
+       alpha = .7, edge.alpha = 0.15,
+       edge.size = "weights",
+       layout.exp = .45,
+       layout.par = list(repulse.rad = 60,
+                         area = 12500),
+       label.size= 3) + ggtitle('d')
+
+
+cairo_ps(file = './MetaAnalysis2/PapierII/ParasiteVectors/Review2/Figure4rev.eps',
+         fallback_resolution = 600)
+multiplot(p1,p3,p2,p4,
+          cols = 2)
+dev.off()
 
 # R version 4.0.2 (2020-06-22)
 # Platform: x86_64-apple-darwin17.0 (64-bit)

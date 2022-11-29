@@ -453,6 +453,14 @@ for (modeltype in 1:2){
         plot(pROC::roc(m$Y[,i],mPredY[,i]),main = sp2[i],xlim=c(1,0),ylim = c(0,1))
       }
       dev.off()
+      
+      cairo_ps(file = paste0('ROCcurves_Australia_model',model,".eps"),
+               fallback_resolution = 600)
+      par(mfrow = c(6,3))
+      for(i in order(m$spNames)){
+        plot(pROC::roc(m$Y[,i],mPredY[,i]),main = sp2[i],xlim=c(1,0),ylim = c(0,1))
+      }
+      dev.off()
     }
     
     plotOrder = sp2[corrMatOrder(toPlot[sp2,sp2], order = "AOE")]
@@ -492,7 +500,10 @@ for (modeltype in 1:2){
       pdf(file = paste0(filnam,".pdf"),width = 14,height =8)
       plotVP(m,VP)
       dev.off()
-      
+      cairo_ps(file = paste0(filnam,".eps"),
+               fallback_resolution = 600)
+      plotVP(m,VP)
+      dev.off()
       # VP = computeVariancePartitioning(m)
       # filnam = paste0("resAUS/",c("pa","abu")[modeltype],"_VP_not_grouped_",c("raw_","res_")[model])
       # tiff(filename=paste0(filnam,".tiff"),res=300, unit="cm", height=17, width=17)
@@ -537,6 +548,93 @@ corr_abu[lower.tri(corr_abu)] <- corr_modelT2_model2[lower.tri(corr_modelT2_mode
 #### Export correlation matrices
 write.csv(corr_pa, file = 'CooccurrenceMatrix_PA_Australia.csv',quote=F)
 write.csv(corr_abu, file = 'CooccurrenceMatrix_ABU_Australia.csv',quote=F)
+
+#### Network visualization
+### Residual vs. raw - Presence/Absence
+#corr_modelT1_model1 raw
+#corr_modelT1_model2 residual
+corr_pa_raw = corr_modelT1_model1
+corr_pa_res = corr_modelT1_model2
+
+### Residual vs. raw - Abundance
+#corr_modelT2_model1 raw
+#corr_modelT2_model2 residual
+corr_abu_raw = corr_modelT2_model1 ## raw
+corr_abu_res = corr_modelT2_model2 ## raw
+
+
+### Network representation: P/A or Abu
+##### Network
+require(GGally)
+require(ggnetwork)
+require(network)
+
+### Remove disconnected species
+## Co-occurrences are scaled by 1/3 for visualization
+net.pa.raw = as.network.matrix(corr_pa_raw, matrix.type = 'adjacency',
+                               names.eval = 'weights',ignore.eval = F)
+net.pa.res = as.network.matrix(corr_pa_res, matrix.type = 'adjacency',
+                               names.eval = 'weights',ignore.eval = F)
+net.abu.raw = as.network.matrix(corr_abu_raw, matrix.type = 'adjacency',
+                                names.eval = 'weights',ignore.eval = F)
+net.abu.res = as.network.matrix(corr_abu_res, matrix.type = 'adjacency',
+                                names.eval = 'weights',ignore.eval = F)
+
+### SPecies
+factor(sort(unique(ggnetwork(net.abu.res)[,3])))
+# [1] C.acuticaudatum   C.brevicapsulatus C.calicatus       C.catinatum       C.coronatus      
+# [6] C.goldi           C.insigne         C.labiatus        C.labratus        C.leptostomum    
+# [11] C.longibursatus   C.minutus         C.nassatus        C.pateratum       S.edentatus      
+# [16] S.vulgaris        T.serratus 
+
+set.edge.attribute(net.pa.raw, "color", ifelse(net.pa.raw %e% "weights" > 0, "#d8b365", "#5ab4ac"))
+set.edge.attribute(net.pa.res, "color", ifelse(net.pa.res %e% "weights" > 0, "#d8b365", "#5ab4ac"))
+set.edge.attribute(net.abu.raw, "color", ifelse(net.abu.raw %e% "weights" > 0, "#d8b365", "#5ab4ac"))
+set.edge.attribute(net.abu.res, "color", ifelse(net.abu.res %e% "weights" > 0, "#d8b365", "#5ab4ac"))
+
+p1 = ggnet2(net.pa.raw,label = T, 
+            edge.color = 'color',
+            color = viridis::viridis_pal()(17), 
+            alpha = .7, edge.alpha = 0.15,
+            #edge.size = "weights",
+            layout.exp = .65,
+            layout.par = list(repulse.rad = 160,
+                              area = 15200),
+            label.size= 3) + ggtitle('a')
+
+p2 = ggnet2(net.pa.res,label = T,edge.color = 'color',
+            color = viridis::viridis_pal()(17),
+            alpha = .7, edge.alpha = 0.15,
+            edge.size = "weights",
+            layout.exp = .65,
+            layout.par = list(repulse.rad = 160,
+                              area = 15200),
+            label.size= 3) + ggtitle('b')
+
+p3 = ggnet2(net.abu.raw,label = T,edge.color = 'color',
+            color = viridis::viridis_pal()(17),
+            alpha = .7, edge.alpha = 0.15,
+            edge.size = "weights",
+            layout.exp = .65,
+            layout.par = list(repulse.rad = 160,
+                              area = 15200),
+            label.size= 3) + ggtitle('c') 
+
+p4 = ggnet2(net.abu.res,label = T,edge.color = 'color',
+            color = viridis::viridis_pal()(17),
+            alpha = .7, edge.alpha = 0.15,
+            edge.size = "weights",
+            layout.exp = .65,
+            layout.par = list(repulse.rad = 160,
+                              area = 12500),
+            label.size= 3) + ggtitle('d')
+
+
+cairo_ps(file = './MetaAnalysis2/PapierII/ParasiteVectors/Review2/FigureS2rev.eps',
+         fallback_resolution = 600)
+multiplot(p1,p3,p2,p4,
+          cols = 2)
+dev.off()
 
 # ###--------======= Investigate C. coronatus / C. longibursatus
 # nired = nisp[,c('C.coronatus','C.longibursatus')]
